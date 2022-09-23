@@ -88,30 +88,15 @@
       color: white; 
     }
 
-   /* Style buttons */
-  .btn {
-    background-color: #f3f3f3; /* Blue background */
-    border: 2px solid #3996b8; /* Remove borders */
-    color: #3996b8; /* White text */
-    padding: 12px 16px; /* Some padding */
-    font-size: 16px; /* Set a font size */
-    cursor: pointer; /* Mouse pointer on hover */
-    margin-bottom: 10px;
-    margin-left: 8px;
-  }
-
-  /* Darker background on mouse-over */
-  .btn:hover {
-    background-color: #3996b8;
-    color: #f3f3f3;
-  }
-
-  #output {
-    color:  orange;
-    font-size:  18px;
-    font-weight:  bolder;
-    padding: 5px;
-  }
+    #toolbarDiv {
+      position: absolute;
+      top: 120px;
+      right: 15px;
+      cursor: default;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+    }
 
   @media only screen and (max-width: 600px) {  
     .slidecontainer {
@@ -127,7 +112,8 @@
     </style>
     
     <script>
-      require(["esri/Map", "esri/views/MapView", "esri/config", "esri/WebMap", "esri/layers/TileLayer", "esri/layers/GraphicsLayer", "esri/widgets/LayerList", "esri/widgets/Expand", "esri/widgets/Sketch", "esri/widgets/Measurement" ], (Map, MapView, esriConfig, WebMap, TileLayer, GraphicsLayer, LayerList, Expand, Sketch, Measurement) => {
+      require(["esri/Map", "esri/views/MapView", "esri/config", "esri/WebMap", "esri/layers/TileLayer", "esri/layers/GraphicsLayer", "esri/widgets/LayerList", "esri/widgets/Expand", "esri/widgets/Sketch", "esri/widgets/Measurement", "esri/geometry/projection", "esri/geometry/SpatialReference", "esri/geometry/Extent"], (Map, MapView, esriConfig, WebMap, TileLayer, GraphicsLayer, LayerList, Expand, Sketch, Measurement, projection, SpatialReference, Extent) => {
+
         // create a new graphics layer for the sketch
         const graphicsLayer = new GraphicsLayer();
         // Set the portal URL
@@ -150,27 +136,9 @@
                 position:"top-center"
             }
           }
-        });   
+        });  
 
-       /* // Create new instance of the Measurement widget
-        const measurement = new Measurement();
-
-        // Set-up event handlers for buttons and click events
-        const switchButton = document.getElementById("switch-btn");
-        const distanceButton = document.getElementById('distance');
-        const areaButton = document.getElementById('area');
-        const clearButton = document.getElementById('clear');
-
-      
-        distanceButton.addEventListener("click", () => {
-          distanceMeasurement();
-        });
-        areaButton.addEventListener("click", () => {
-          areaMeasurement();
-        });
-        clearButton.addEventListener("click", () => {
-          clearMeasurements();
-        });    */
+        webmap.add(graphicsLayer);       
 
           // LayerList widget
           layerList = new LayerList({
@@ -188,11 +156,12 @@
           view.ui.add(layerListExpand, "top-left");    
 
           view.when(() => {
+              // projection.load();
             const sketch = new Sketch({
               layer: graphicsLayer,
               view: view,
               // graphic will be selected as soon as it is created
-              creationMode: "update"
+              creationMode: "update",              
             });
 
             // Setting the sketch's visible elements as below would result
@@ -207,16 +176,97 @@
               selectionTools:{
                 "lasso-selection": false
               },
-              settingsMenu: false
+              settingsMenu: true
             }
 
-            view.ui.add(sketch, "top-right");
-         });
+            view.ui.add(sketch, "top-right");  
+
+            // Listen to sketch widget's create event.
+            sketch.on("create", function(event) {              
+              // check if the create event's state has changed to complete indicating
+              // the graphic create operation is completed.
+              if (event.state === "complete") {
+                // get the extent of the drawn feature
+                const extent = event.graphic.geometry.extent;
+                const cs1 = new SpatialReference({
+                  wkid: 4326 //  Web Mercator WGS 84
+                });
+
+                const cs2 = new SpatialReference({
+                  wkid: 6318 // NAD83 MI State Plane
+                });
+
+                const newExtent = new Extent({
+                  xmin: extent.xmin,
+                  ymin: extent.ymin,
+                  xmax: extent.xmax,
+                  ymax: extent.ymax,
+                  //SpatialReference: 6318
+                });
+
+               /* console.log(newExtent, projection.isLoaded());
+                projection.load().then(function() {
+                  let projectedPoints = projection.project(newExtent, cs2);
+                // convert the extent coords from 3857 to 6318  
+                const geogtrans = projection.getTransformations(cs1, cs2, newExtent);
+                console.log(projectedPoints);
+                geogtrans.forEach(function(geogtran, index) {
+
+                  geogtran.steps.forEach(function(step, index) {
+                    console.log("step wkid: ", step.wkid);
+                  });
+              });
+              }); */             
+              }
+            });         
+      });  
+
+
+
+           // Create new instance of the Measurement widget
+            const measurement = new Measurement();
+
+            measurement.view = view;
+            
+            const distanceButton = document.getElementById('distance');
+            const areaButton = document.getElementById('area');
+            const clearButton = document.getElementById('clear');
 
           
-      }); 
+            distanceButton.addEventListener("click", () => {
+              distanceMeasurement();
+            });
+            areaButton.addEventListener("click", () => {
+              areaMeasurement();
+            });
+            clearButton.addEventListener("click", () => {
+              clearMeasurements();
+            });    
 
+             // Call the appropriate DistanceMeasurement2D or DirectLineMeasurement3D
+            function distanceMeasurement() {
+              console.log('measure dist');
+              //const type = activeView.type;
+              measurement.activeTool = "distance";
+              distanceButton.classList.add("active");
+              areaButton.classList.remove("active");
+            }
 
+            // Call the appropriate AreaMeasurement2D or AreaMeasurement3D
+            function areaMeasurement() {
+              measurement.activeTool = "area";
+              distanceButton.classList.remove("active");
+              areaButton.classList.add("active");
+            }
+
+            // Clears all measurements
+            function clearMeasurements() {
+              distanceButton.classList.remove("active");
+              areaButton.classList.remove("active");
+              measurement.clear();
+            }
+            view.ui.add(measurement, "bottom-right");
+    }); 
 
     </script>
   </head>
@@ -241,7 +291,7 @@
     </div>
 </nav> 
     <div id="viewDiv"></div>
-
+    <div id="infoDiv">
     <div id="toolbarDiv" class="esri-component esri-widget">
       <button id="distance" class="esri-widget--button esri-interactive esri-icon-measure-line" title="Distance Measurement Tool">
       </button>
