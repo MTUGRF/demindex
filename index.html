@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">      
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.10.0/viewer.css" integrity="sha512-tYobxYoCZxl0CejYCA8c4w8HRcg3wRoKaGYIQ/2ILqyB4vRqMd/Jmehxod1dQJ2uE/9rDY9pG48isM8SHEAwDQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">      
     <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>      
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>     
+     <script src="https://unpkg.com/@esri/arcgis-rest-request@4.0.0/dist/bundled/request.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.0/dist/bundled/feature-service.umd.js"></script>     
     <script src="https://js.arcgis.com/4.24/"></script>
     <style>    
      
@@ -187,9 +188,10 @@
               // the graphic create operation is completed.
               if (event.state === "complete") {
                 // get the extent of the drawn feature
+                console.log(event.graphic);
                 const extent = event.graphic.geometry.extent;
                 const cs1 = new SpatialReference({
-                  wkid: 4326 //  Web Mercator WGS 84
+                  wkid: 3857 //  Web Mercator WGS 84
                 });
 
                 const cs2 = new SpatialReference({
@@ -201,8 +203,37 @@
                   ymin: extent.ymin,
                   xmax: extent.xmax,
                   ymax: extent.ymax,
-                  //SpatialReference: 6318
+                  spatialReference: {
+          wkt:  
+'PROJCS["NAD_1983_2011_StatePlane_Michigan_North_FIPS_2111_Ft_Intl",GEOGCS["GCS_NAD_1983_2011",DATUM["D_NAD_1983_2011",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic"],PARAMETER["false_easting",26246719.160105],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-87.0],PARAMETER["standard_parallel_1",45.4833333333333],PARAMETER["standard_parallel_2",47.05],PARAMETER["latitude_of_origin",44.7833333333333],UNIT["Foot",0.3048]]'
+        }
                 });
+
+                console.log(newExtent);
+
+                $.ajax({
+		            dataType: 'json',
+		            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/DEMS/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + extent.xmin +  '%2C'+ extent.ymin + '%2C' + extent.xmax + '%2C' + extent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
+		            type: "GET",    
+		            success: function(data) {		              
+		              const features = data.features;
+		              const idArray = []; 
+		              features.forEach(function(feature) {
+		              	const rasterId = feature.attributes.OBJECTID;
+		              	idArray.push(rasterId);
+		              });  
+              		  console.log(data.features, idArray);
+              		  $.ajax({
+			            dataType: 'json',
+			            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/DEMS/ImageServer/download?rasterIds=' + idArray + '&geometry=' + newExtent.xmin +	'%2C' + newExtent.ymin + '%2C' + newExtent.xmax + '%2C' + newExtent.ymax+ '&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
+			            type: "GET",    
+			            success: function(data) {
+			            	console.log(data);
+			            }
+			  		  });
+              		}
+			  		}); 
+		   
 
                /* console.log(newExtent, projection.isLoaded());
                 projection.load().then(function() {
