@@ -13,7 +13,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js" integrity="sha512-3j3VU6WC5rPQB4Ld1jnLV7Kd5xr+cq9avvhwqzbH/taCRNURoeEpoPBK9pDyeukwSxwRPJ8fDgvYXd6SkaZ2TA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>     
      <script src="https://unpkg.com/@esri/arcgis-rest-request@4.0.0/dist/bundled/request.umd.js"></script>
-    <script src="https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.0/dist/bundled/feature-service.umd.js"></script>     
+    <script src="https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.0/dist/bundled/feature-service.umd.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js" integrity="sha512-ha3Is9IgbEyIInSb+4S6IlEwpimz00N5J/dVLQFKhePkZ/HywIbxLeEu5w+hRjVBpbujTogNyT311tluwemy9w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>    
     <script src="https://js.arcgis.com/4.24/"></script>
     <style>    
      
@@ -202,14 +203,22 @@
                   xmin: extent.xmin,
                   ymin: extent.ymin,
                   xmax: extent.xmax,
-                  ymax: extent.ymax,
-                  spatialReference: {
-          wkt:  
-'PROJCS["NAD_1983_2011_StatePlane_Michigan_North_FIPS_2111_Ft_Intl",GEOGCS["GCS_NAD_1983_2011",DATUM["D_NAD_1983_2011",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic"],PARAMETER["false_easting",26246719.160105],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-87.0],PARAMETER["standard_parallel_1",45.4833333333333],PARAMETER["standard_parallel_2",47.05],PARAMETER["latitude_of_origin",44.7833333333333],UNIT["Foot",0.3048]]'
-        }
+                  ymax: extent.ymax     
                 });
 
+                const WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]'
+
+                proj4.defs("EPSG:6496","+proj=lcc +lat_0=44.7833333333333 +lon_0=-87 +lat_1=47.0833333333333 +lat_2=45.4833333333333 +x_0=7999999.999968 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs +type=crs");
+
+                const NAD83 = proj4('EPSG:6496');
+
                 console.log(newExtent);
+
+                const xminymin = proj4(NAD83,[extent.xmin, extent.ymin]);
+                const xmaxymax = proj4(NAD83,[extent.xmax, extent.ymax]);
+
+                console.log('xminymin' + xminymin);
+                console.log('xmaxymax' + xmaxymax);
 
                 $.ajax({
 		            dataType: 'json',
@@ -225,7 +234,7 @@
               		  console.log(data.features, idArray);
               		  $.ajax({
 			            dataType: 'json',
-			            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/DEMS/ImageServer/download?rasterIds=' + idArray + '&geometry=' + newExtent.xmin +	'%2C' + newExtent.ymin + '%2C' + newExtent.xmax + '%2C' + newExtent.ymax+ '&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
+			            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/DEMS/ImageServer/download?rasterIds=' + idArray + '&geometry=' + extent.xmin +	'%2C' + extent.ymin + '%2C' + extent.xmax + '%2C' + extent.ymax + '&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
 			            type: "GET",    
 			            success: function(data) {
 			            	console.log(data);
