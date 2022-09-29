@@ -222,7 +222,7 @@
 
                 $.ajax({
 		            dataType: 'json',
-		            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/DEMS/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + extent.xmin +  '%2C'+ extent.ymin + '%2C' + extent.xmax + '%2C' + extent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
+		            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + extent.xmin +  '%2C'+ extent.ymin + '%2C' + extent.xmax + '%2C' + extent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
 		            type: "GET",    
 		            success: function(data) {		              
 		              const features = data.features;
@@ -234,7 +234,7 @@
               		  console.log(data.features, idArray);
               		  $.ajax({
 			            dataType: 'json',
-			            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/DEMS/ImageServer/download?rasterIds=' + idArray + '&geometry=' + extent.xmin +	'%2C' + extent.ymin + '%2C' + extent.xmax + '%2C' + extent.ymax + '&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
+			            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/download?rasterIds=' + idArray + '&geometry={"xmin":' + extent.xmin + ', "ymin":' + extent.ymin + ',"xmax":' + extent.xmax + ',"ymax":' + extent.ymax + ',"spatialReference":{"wkid":3857}}&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
 			            type: "GET",    
 			            success: function(data) {
 			            	console.log(data);
