@@ -203,7 +203,11 @@
                   xmin: extent.xmin,
                   ymin: extent.ymin,
                   xmax: extent.xmax,
-                  ymax: extent.ymax     
+                  ymax: extent.ymax,                  
+                  spatialReference: {
+                    wkid: 2251
+                  }
+                       
                 });
 
                 const WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]'
@@ -222,7 +226,7 @@
 
                 $.ajax({
 		            dataType: 'json',
-		            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + extent.xmin +  '%2C'+ extent.ymin + '%2C' + extent.xmax + '%2C' + extent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
+		            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + newExtent.xmin +  '%2C'+ newExtent.ymin + '%2C' + newExtent.xmax + '%2C' + newExtent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
 		            type: "GET",    
 		            success: function(data) {		              
 		              const features = data.features;
