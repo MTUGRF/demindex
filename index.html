@@ -190,79 +190,41 @@
               if (event.state === "complete") {
                 // get the extent of the drawn feature
                 console.log(event.graphic);
-                const extent = event.graphic.geometry.extent;
-                const cs1 = new SpatialReference({
-                  wkid: 3857 //  Web Mercator WGS 84
-                });
-
-                const cs2 = new SpatialReference({
-                  wkid: 6318 // NAD83 MI State Plane
-                });
-
-                const newExtent = new Extent({
-                  xmin: extent.xmin,
-                  ymin: extent.ymin,
-                  xmax: extent.xmax,
-                  ymax: extent.ymax,                  
-                  spatialReference: {
-                    wkid: 2251
-                  }
-                       
-                });
-
-                const WGS84 = 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]'
-
-                proj4.defs("EPSG:6496","+proj=lcc +lat_0=44.7833333333333 +lon_0=-87 +lat_1=47.0833333333333 +lat_2=45.4833333333333 +x_0=7999999.999968 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=ft +no_defs +type=crs");
-
-                const NAD83 = proj4('EPSG:6496');
-
-                console.log(newExtent);
-
-                const xminymin = proj4(NAD83,[extent.xmin, extent.ymin]);
-                const xmaxymax = proj4(NAD83,[extent.xmax, extent.ymax]);
-
-                console.log('xminymin' + xminymin);
-                console.log('xmaxymax' + xmaxymax);
-
-                $.ajax({
-		            dataType: 'json',
-		            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + newExtent.xmin +  '%2C'+ newExtent.ymin + '%2C' + newExtent.xmax + '%2C' + newExtent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
-		            type: "GET",    
-		            success: function(data) {		              
-		              const features = data.features;
-		              const idArray = []; 
-		              features.forEach(function(feature) {
-		              	const rasterId = feature.attributes.OBJECTID;
-		              	idArray.push(rasterId);
-		              });  
-              		  console.log(data.features, idArray);
-              		  $.ajax({
-			            dataType: 'json',
-			            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/download?rasterIds=' + idArray + '&geometry={"xmin":' + extent.xmin + ', "ymin":' + extent.ymin + ',"xmax":' + extent.xmax + ',"ymax":' + extent.ymax + ',"spatialReference":{"wkid":3857}}&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
-			            type: "GET",    
-			            success: function(data) {
-			            	console.log(data);
-			            }
-			  		  });
-              		}
-			  		}); 
-		   
-
-               /* console.log(newExtent, projection.isLoaded());
+                // const idArray = [];
+                  $.ajax({
+                dataType: 'json',
+                url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + event.graphic.geometry.extent.xmin +  '%2C'+ event.graphic.geometry.extent.ymin + '%2C' + event.graphic.geometry.extent.xmax + '%2C' + event.graphic.geometry.extent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
+                type: "GET",    
+                success: function(data) {                 
+                  const features = data.features;
+                  const idArray = []; 
+                  features.forEach(function(feature) {
+                    const rasterId = feature.attributes.OBJECTID;
+                    idArray.push(rasterId);
+                  });                
+              
                 projection.load().then(function() {
-                  let projectedPoints = projection.project(newExtent, cs2);
-                // convert the extent coords from 3857 to 6318  
-                const geogtrans = projection.getTransformations(cs1, cs2, newExtent);
-                console.log(projectedPoints);
-                geogtrans.forEach(function(geogtran, index) {
-
-                  geogtran.steps.forEach(function(step, index) {
-                    console.log("step wkid: ", step.wkid);
+                  let outSpatialReference = new SpatialReference({
+                     wkid: 6496 //Sphere_Sinusoidal projection
                   });
+                 //polygonGraphics.forEach(function(graphic) {
+                   event.graphic.geometry = projection.project(event.graphic.geometry, outSpatialReference);
+                   console.log(event.graphic.geometry);  
+
+                    $.ajax({
+                  dataType: 'json',
+                  url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/download?rasterIds=' + idArray + '&geometry=' + event.graphic.geometry.extent.xmin + ',' + event.graphic.geometry.extent.ymin + ',' + event.graphic.geometry.extent.xmax + ',' + event.graphic.geometry.extent.ymax + '&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
+                  type: "GET",    
+                  success: function(data) {
+                    console.log(data, idArray);
+                  }
+              });                   
+                            
               });
-              }); */             
-              }
-            });         
+            }
+            });
+            };   
+            });      
       });  
 
 
