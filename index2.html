@@ -21,16 +21,16 @@
   <style>
     html,
     body,
-    #viewDiv {   
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;      
-    }
+#viewDiv {   
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;      
+}
 
-    body {
-  display: flex;
-  --calcite-ui-brand: #003366;
+body {
+display: flex;
+--calcite-ui-brand: #003366;
 }
 
 calcite-loader {
@@ -88,7 +88,7 @@ calcite-rating {
           <calcite-action data-action-id="basemaps" icon="basemap" text="Basemaps"></calcite-action>
           <calcite-action data-action-id="legend" icon="legend" text="Legend"></calcite-action>
           <calcite-action data-action-id="bookmarks" icon="bookmark" text="Bookmarks"></calcite-action>
-          <calcite-action data-action-id="print" icon="print" text="Print"></calcite-action>
+          <calcite-action data-action-id="feature" icon="popup" text="Feature"></calcite-action>
           <calcite-action data-action-id="information" icon="information" text="Information"></calcite-action>
         </calcite-action-bar>
 
@@ -105,23 +105,31 @@ calcite-rating {
         <calcite-panel heading="Bookmarks" height-scale="l" data-panel-id="bookmarks" hidden>
           <div id="bookmarks-container"></div>
         </calcite-panel>
-        <calcite-panel heading="Print" height-scale="l" data-panel-id="print" hidden>
-          <div id="print-container"></div>
+        <calcite-panel heading="Feature" height-scale="l" data-panel-id="feature" hidden>
+          <div id="feature-container"></div>
         </calcite-panel>
 
         <!-- Info panel (populates with info from the web map) -->
         <calcite-panel heading="Details" data-panel-id="information" hidden>
           <div id="info-content">
-            <img id="item-thumbnail" alt="webmap thumbnail" />
-            <div id="item-description">
-              <!-- Dynamically populated -->
-            </div>
-            <calcite-label layout="inline">
-              <b>Rating:</b>
-              <calcite-rating id="item-rating" read-only>
-                <!-- Dynamically populated -->
-              </calcite-rating>
-            </calcite-label>
+           <calcite-label layout="inline">About</calcite-label>
+              <p>This application serves as an Index map allowing for the discovery and download of Two-Foot Resolution Digital Elevation Model (DEM) tiles for Houghton and Keweenaw Counties. The DEM coverage is available as mosaics of individual townships. To download a DEM click on the Township and Range section on the PLSS you of the township you are interested in downloading the DEM for and click 'Download' under the Township and Range title or  ‘View’ next to the Download DEM section of the pop-up in the sidebar. The link will direct you to our Google Drive account where you can download the high-resolution DEM.</p>
+
+              <calcite-label layout="inline">Metadata</calcite-label>
+              <p>Originator: Quantum Spatial, Inc.<br>
+              Date Created: 2018<br>
+              Lidar Scan Angle: 18<br>
+              Altitude Datum: NAVD88<br>
+              Lidar Normal Point Spacing: 0.6m<br>
+              Lidar Specification: USGS-NGP Base Specification (2011) State Plane Michigan North FIPS 2011, intl feet<br>
+              Lidar CRS: NAD83 (2011) State Plane Michigan North FIPS 2111, Intl feet<br>
+              Lidar Sensor: Leica ALS70<br>
+              Place: Ottawa National Forest<br>
+              Created by: Steven Anderson<br>
+              State Name: Michigan<br>
+              Distributing Agency: Sanborn Map Company, Inc.<br> 
+              Area of Interest: Houghton<br>
+              Year Published: 2020</p>            
           </div>
         </calcite-panel>
       </calcite-shell-panel>
@@ -148,7 +156,8 @@ calcite-rating {
        "esri/geometry/projection",
         "esri/geometry/SpatialReference", 
         "esri/geometry/Extent",
-    ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent) {
+        "esri/widgets/Feature",
+    ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature) {
 
       // create a new graphics layer for the sketch
         const graphicsLayer = new GraphicsLayer();
@@ -202,17 +211,19 @@ calcite-rating {
         container: "legend-container"
       });
 
-      const print = new Print({
-        view,
-        container: "print-container"
+      const feature = new Feature({
+        //view,
+        map: view.map,
+        spatialReference: view.SpatialReference,
+        container: "feature-container"
       });
 
       map.when(() => {
         const { title, description, thumbnailUrl, avgRating } = map.portalItem;
         document.querySelector("#header-title").textContent = title;
-        document.querySelector("#item-description").innerHTML = description;
-        document.querySelector("#item-thumbnail").src = thumbnailUrl;
-        document.querySelector("#item-rating").value = avgRating;
+       // document.querySelector("#item-description").innerHTML = description;
+        //document.querySelector("#item-thumbnail").src = thumbnailUrl;
+       // document.querySelector("#item-rating").value = avgRating;
 
         let activeWidget;
 
