@@ -182,27 +182,36 @@
               settingsMenu: true
             }
 
-            view.ui.add(sketch, "top-right");  
+            view.ui.add(sketch, "top-right"); 
 
+            var mapScale; 
+            view.watch('scale', function(evt){
+                  mapScale = evt;                  
+            });
             // Listen to sketch widget's create event.
-            sketch.on("create", function(event) {              
+            sketch.on("create", function(event) { 
+              console.log(mapScale);             
               // check if the create event's state has changed to complete indicating
               // the graphic create operation is completed.
               if (event.state === "complete") {
-                // get the extent of the drawn feature
-                console.log(event.graphic);
+                // get the extent of the drawn feature                               
+               // pixelsize X and Y from the image service
+               var resolution = (1.738696247684391 + 1.7386962476843981) / 2;
+
+               // get the width and height from the bounding box
+               var width = (event.graphic.geometry.extent.xmax - event.graphic.geometry.extent.xmin);
+               var height = (event.graphic.geometry.extent.ymax - event.graphic.geometry.extent.ymin);
+
+               var ps = 0.52995461629420237415;
+
+               var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();
                 // const idArray = [];
                   $.ajax({
                 dataType: 'json',
-                url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/query?where=1%3D1&objectIds=&time=&geometry=' + event.graphic.geometry.extent.xmin +  '%2C'+ event.graphic.geometry.extent.ymin + '%2C' + event.graphic.geometry.extent.xmax + '%2C' + event.graphic.geometry.extent.ymax + '&geometryType=esriGeometryEnvelope&inSR=3857&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&outSR=&returnIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&pixelSize=&rasterQuery=&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnDistinctValues=false&multidimensionalDefinition=&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&resultOffset=&resultRecordCount=&f=pjson',
-                type: "GET",    
-                success: function(data) {                 
-                  const features = data.features;
-                  const idArray = []; 
-                  features.forEach(function(feature) {
-                    const rasterId = feature.attributes.OBJECTID;
-                    idArray.push(rasterId);
-                  });                
+                url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/dems2/ImageServer/exportImage?bbox=' + event.graphic.geometry.extent.xmin +  '%2C'+ event.graphic.geometry.extent.ymin + '%2C' + event.graphic.geometry.extent.xmax + '%2C' + event.graphic.geometry.extent.ymax + '&bboxSR=3857&size=' + size + '&imageSR=&time=&format=tiff&pixelType=F32&noData=0&noDataInterpretation=esriNoDataMatchAny&interpolation=+RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=json',               
+                success: function(data) {   
+                console.log(data);           
+                   
               
                 projection.load().then(function() {
                   let outSpatialReference = new SpatialReference({
@@ -210,16 +219,7 @@
                   });
                  //polygonGraphics.forEach(function(graphic) {
                    event.graphic.geometry = projection.project(event.graphic.geometry, outSpatialReference);
-                   console.log(event.graphic.geometry);  
-
-                    $.ajax({
-                  dataType: 'json',
-                  url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/demsnew/ImageServer/download?rasterIds=' + idArray + '&geometry=' + event.graphic.geometry.extent.xmin + ',' + event.graphic.geometry.extent.ymin + ',' + event.graphic.geometry.extent.xmax + ',' + event.graphic.geometry.extent.ymax + '&geometryType=esriGeometryEnvelope&format=tif&f=pjson',
-                  type: "GET",    
-                  success: function(data) {
-                    console.log(data, idArray);
-                  }
-              });                   
+                   console.log(event.graphic.geometry);         
                             
               });
             }
