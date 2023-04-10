@@ -158,8 +158,7 @@
 
           view.ui.add(layerListExpand, "top-left");    
 
-          view.when(() => {
-              // projection.load();
+          view.when(() => {             
             const sketch = new Sketch({
               layer: graphicsLayer,
               view: view,
@@ -174,10 +173,12 @@
               createTools: {
                 point: false,
                 circle: false,
-                polyline: false
+                polyline: false,
+                polygon: false
               },
               selectionTools:{
-                "lasso-selection": false
+                "lasso-selection": false,
+                "rectangle-selection": false
               },
               settingsMenu: true
             }
@@ -190,7 +191,7 @@
             });
             // Listen to sketch widget's create event.
             sketch.on("create", function(event) { 
-              console.log(mapScale);             
+                      
               // check if the create event's state has changed to complete indicating
               // the graphic create operation is completed.
               if (event.state === "complete") {
@@ -210,7 +211,14 @@
                 dataType: 'json',
                 url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/dems2/ImageServer/exportImage?bbox=' + event.graphic.geometry.extent.xmin +  '%2C'+ event.graphic.geometry.extent.ymin + '%2C' + event.graphic.geometry.extent.xmax + '%2C' + event.graphic.geometry.extent.ymax + '&bboxSR=3857&size=' + size + '&imageSR=&time=&format=tiff&pixelType=F32&noData=0&noDataInterpretation=esriNoDataMatchAny&interpolation=+RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=json',               
                 success: function(data) {   
-                console.log(data);           
+                  console.log(data);
+                  // Get the .TIF url and download the image
+                  const a = document.createElement("a");
+                  a.href = data.href;
+                  a.download = "";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);           
                    
               
                 projection.load().then(function() {
@@ -219,8 +227,7 @@
                   });
                  //polygonGraphics.forEach(function(graphic) {
                    event.graphic.geometry = projection.project(event.graphic.geometry, outSpatialReference);
-                   console.log(event.graphic.geometry);         
-                            
+                   console.log(event.graphic.geometry);                             
               });
             }
             });

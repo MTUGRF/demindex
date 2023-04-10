@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>Calcite Components: Create a mapping app</title>
+    <title>MTU GRF DEM Download Tool</title>
     <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/dark/main.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">      
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -34,9 +34,9 @@ display: flex;
 }
 
 calcite-loader {
-  align-self: center;
-  justify-self: center;
-  --calcite-ui-brand: #003366;
+  z-index: 9999999 !important;  
+  --calcite-ui-brand: #003366; 
+
 }
 
 #info-content {
@@ -51,6 +51,7 @@ calcite-rating {
   display: flex;
   padding: 0 1rem;
   background-color: var(--calcite-ui-foreground-1);
+  margin: 5px;
 }
 
 .custom-header-controls {
@@ -69,13 +70,12 @@ calcite-rating {
 .header-switch {
   margin: 0 0.5rem;
 }
-
-
   </style>
 
   <body>
+    <calcite-loader scale="l" label="Processing raster..."></calcite-loader>
     <div class="calcite-theme-dark">
-    <calcite-loader active></calcite-loader>
+    
     <calcite-shell content-behind hidden>
      <div slot="header" class="custom-header">
       <img src="husky.svg" width="50" height="50" class="d-inline-block align-top" alt=""><h2 id="header-title" slot="header">
@@ -87,7 +87,7 @@ calcite-rating {
           <calcite-action data-action-id="layers" icon="layers" text="Layers"></calcite-action>
           <calcite-action data-action-id="basemaps" icon="basemap" text="Basemaps"></calcite-action>
           <calcite-action data-action-id="legend" icon="legend" text="Legend"></calcite-action>
-          <calcite-action data-action-id="bookmarks" icon="bookmark" text="Bookmarks"></calcite-action>
+          <calcite-action data-action-id="measure" icon="measure-area" text="Measure"></calcite-action>
           <calcite-action data-action-id="feature" icon="popup" text="Feature"></calcite-action>
           <calcite-action data-action-id="information" icon="information" text="Information"></calcite-action>
         </calcite-action-bar>
@@ -102,8 +102,8 @@ calcite-rating {
         <calcite-panel heading="Legend" height-scale="l" data-panel-id="legend" hidden>
           <div id="legend-container"></div>
         </calcite-panel>
-        <calcite-panel heading="Bookmarks" height-scale="l" data-panel-id="bookmarks" hidden>
-          <div id="bookmarks-container"></div>
+        <calcite-panel heading="Measurement" height-scale="l" data-panel-id="measure" hidden>
+          <div id="measure-container"></div>
         </calcite-panel>
         <calcite-panel heading="Feature" height-scale="l" data-panel-id="feature" hidden>
           <div id="feature-container"></div>
@@ -153,52 +153,46 @@ calcite-rating {
       "esri/widgets/Expand", 
       "esri/widgets/Sketch", 
       "esri/widgets/Measurement",
-       "esri/geometry/projection",
-        "esri/geometry/SpatialReference", 
-        "esri/geometry/Extent",
-        "esri/widgets/Feature",
-    ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature) {
-
+      "esri/geometry/projection",
+      "esri/geometry/SpatialReference", 
+      "esri/geometry/Extent",
+      "esri/widgets/Feature",
+      "esri/widgets/ScaleBar"
+    ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature, ScaleBar) {
       // create a new graphics layer for the sketch
-        const graphicsLayer = new GraphicsLayer();
-        // Set the portal URL
-        esriConfig.portalUrl = "https://portal1-geo.sabu.mtu.edu/mtuarcgis/";
-        const map = new WebMap({
-          portalItem: { // autocasts as new PortalItem()
-            id: "7a28167c146147d1a71ecb74f13ed636"
-          }
-        });
+      const graphicsLayer = new GraphicsLayer();
+      // Set the portal URL
+      esriConfig.portalUrl = "https://portal1-geo.sabu.mtu.edu/mtuarcgis/";
+      const webmap = new WebMap({
+        portalItem: { // autocasts as new PortalItem()
+          id: "7a28167c146147d1a71ecb74f13ed636"
+        }
+      });
 
-        const view = new MapView({
-          container: "viewDiv", // Reference to the view div created in step 5
-          map: map, // Reference to the map object created before the view   
-          padding: {
-          left: 49
-          },       
-          popup:{
-            highlightEnabled: true,
-            dockEnabled: false,
-            dockOptions: {
-                buttonEnabled: false,
-                breakpoint: false,
-                position:"top-center"
-            }
+      const view = new MapView({
+        container: "viewDiv", // Reference to the view div created in step 5
+        map: webmap, // Reference to the map object created before the view          
+        popup:{
+          highlightEnabled: true,
+          dockEnabled: false,
+          dockOptions: {
+              buttonEnabled: false,
+              breakpoint: false,
+              position:"top-center"
           }
-        });  
+        }
+      });  
 
-      map.add(graphicsLayer);       
+      view.padding.left = 45;
+
+      webmap.add(graphicsLayer);       
       
       view.ui.move("zoom", "top-left");
 
       const basemaps = new BasemapGallery({
         view,
         container: "basemaps-container"
-      });
-
-      const bookmarks = new Bookmarks({
-        view,
-        container: "bookmarks-container"
-      });
+      });      
 
       const layerList = new LayerList({
         view,
@@ -210,17 +204,109 @@ calcite-rating {
         view,
         container: "legend-container"
       });
-
+/*
       const feature = new Feature({
         //view,
-        map: view.map,
+        map: webmap,
+        spatialReference: view.SpatialReference,
+        container: "feature-container"
+      });*/
+
+      const scaleBar = new ScaleBar({
+        view: view
+      });
+      // Add widget to the bottom left corner of the view
+      view.ui.add(scaleBar, {
+        position: "bottom-left"
+      });
+
+      const sketch = new Sketch({
+        layer: graphicsLayer,
+        view: view,
+        // graphic will be selected as soon as it is created
+        creationMode: "update",
+      //  container: "bookmarks-container"              
+      });      
+
+      // Setting the sketch's visible elements as below would result
+      // in removing the point and circle tools. It also removes the
+      // lasso-selection tool and settings menu.
+      sketch.visibleElements = {
+        createTools: {
+          point: false,
+          circle: false,
+          polyline: false,
+          polygon: false
+        },
+        selectionTools:{
+          "lasso-selection": false,
+          "rectangle-selection": false
+        },
+        settingsMenu: true
+      }
+
+      view.ui.add(sketch, "top-right");
+
+      // Listen to sketch widget's create event.
+      sketch.on("create", function(event) {                 
+        // check if the create event's state has changed to complete indicating
+        // the graphic create operation is completed.
+        if (event.state === "complete") {
+          document.querySelector("calcite-loader").active = true;
+          // get the extent of the drawn feature                               
+         // pixelsize X and Y from the image service
+         var resolution = (1.738696247684391 + 1.7386962476843981) / 2;
+
+         // get the width and height from the bounding box
+         var width = (event.graphic.geometry.extent.xmax - event.graphic.geometry.extent.xmin);
+         var height = (event.graphic.geometry.extent.ymax - event.graphic.geometry.extent.ymin);
+
+         var ps = 0.25;
+
+         var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
+         console.log(size);  
+          $.ajax({
+            dataType: 'json',
+            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/wupdem/ImageServer/exportImage?bbox=' + event.graphic.geometry.extent.xmin +  '%2C'+ event.graphic.geometry.extent.ymin + '%2C' + event.graphic.geometry.extent.xmax + '%2C' + event.graphic.geometry.extent.ymax + '&bboxSR=3857&size=' + size + '&imageSR=&time=&format=tiff&pixelType=F32&noData=0&noDataInterpretation=esriNoDataMatchAny&interpolation=+RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=json',               
+            success: function(data) { 
+              document.querySelector("calcite-loader").active = false;  
+              console.log(data);
+              // Get the .TIF url and download the image
+              const a = document.createElement("a");
+              a.href = data.href;
+              a.download = "";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);        
+            }
+          });
+        };   
+      });
+
+      view.on("click", (event) => {
+        view.popup.fetchFeatures(event).then((response) => {
+            console.log(response);
+          response.promisesPerLayerView.forEach((fetchResult) => {
+            const layerView = fetchResult.layerView;
+            // Iterate through the promise results to access its graphics
+            fetchResult.promise.then((graphics) => {
+              console.log(graphics);
+
+      const feature = new Feature({
+        graphic: graphics,
+        map: webmap,
         spatialReference: view.SpatialReference,
         container: "feature-container"
       });
+            });
+          });   
+        });
 
-      map.when(() => {
-        const { title, description, thumbnailUrl, avgRating } = map.portalItem;
-        document.querySelector("#header-title").textContent = title;
+      });  
+
+      webmap.when(() => {
+        const { title, description, thumbnailUrl, avgRating } = webmap.portalItem;
+        document.querySelector("#header-title").textContent = "MTU GRF DEM Download Tool";
        // document.querySelector("#item-description").innerHTML = description;
         //document.querySelector("#item-thumbnail").src = thumbnailUrl;
        // document.querySelector("#item-rating").value = avgRating;
@@ -259,7 +345,7 @@ calcite-rating {
         });
 
         document.querySelector("calcite-shell").hidden = false;
-        document.querySelector("calcite-loader").active = false;
+       // document.querySelector("calcite-loader").active = false;
 
       });
     });
