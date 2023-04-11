@@ -70,6 +70,37 @@ calcite-rating {
 .header-switch {
   margin: 0 0.5rem;
 }
+
+td {
+  color: white;
+}
+.esri-widget__table tr td {
+    width: 50%;
+    text-align: left;
+    border-right: 3px solid rgba(0,0,0,.05);
+    padding: .5em .7em;
+    
+    vertical-align: top;
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .esri-widget__table tr td, .esri-widget__table tr th {
+    word-break: normal;
+  }
+
+  #trtitle {
+    color: var(--calcite-ui-text-1);   
+    font-size: 18px;
+  }
+
+  calcite-button {
+    height: 30px;
+    color: #FFCD00 !important;
+    margin: 5px;
+    --calcite-ui-brand: #ffcd00;
+    --calcite-ui-brand-hover: #ffcd00;
+  }
   </style>
 
   <body>
@@ -107,6 +138,22 @@ calcite-rating {
         </calcite-panel>
         <calcite-panel heading="Feature" height-scale="l" data-panel-id="feature" hidden>
           <div id="feature-container"></div>
+          <div id="trtitle" class="esri-widget__heading esri-popup__header-title"></div>
+          <table class="esri-widget__table">
+            <tr>
+            <td>TR</td>
+            <td><div id="tr"></div></td>          
+          </tr>
+          <tr>            
+            <td>TIER</td>
+            <td><div id="tier"></div></td>
+          </tr>
+          <tr>            
+            <td>RANGE</td>
+            <td><div id="range"></div></td>          
+          </tr>
+        </table>
+        <calcite-button icon-start="arrow-bold-down">Download DEM</calcite-button>
         </calcite-panel>
 
         <!-- Info panel (populates with info from the web map) -->
@@ -261,7 +308,7 @@ calcite-rating {
          var width = (event.graphic.geometry.extent.xmax - event.graphic.geometry.extent.xmin);
          var height = (event.graphic.geometry.extent.ymax - event.graphic.geometry.extent.ymin);
 
-         var ps = 0.25;
+         var ps = 0.25;  //0.87 or 0.86
 
          var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
          console.log(size);  
@@ -281,28 +328,55 @@ calcite-rating {
             }
           });
         };   
-      });
+      });    
 
-      view.on("click", (event) => {
-        view.popup.fetchFeatures(event).then((response) => {
-            console.log(response);
-          response.promisesPerLayerView.forEach((fetchResult) => {
-            const layerView = fetchResult.layerView;
-            // Iterate through the promise results to access its graphics
-            fetchResult.promise.then((graphics) => {
-              console.log(graphics);
+    
+  
 
-      const feature = new Feature({
-        graphic: graphics,
-        map: webmap,
-        spatialReference: view.SpatialReference,
-        container: "feature-container"
-      });
+      view.when(function () {
+          webmap.when((response) => {
+          returnedLayer = response.layers.find((layer) => {
+            console.log(layer); 
+            return layer.id === "18385ca2a11-layer-3";
+          });
+
+          if (returnedLayer.popupTemplate.returnGeometry === false) {
+
+            returnedLayer.popupTemplate.returnGeometry = true;
+
+            view.watch("popup.viewModel.active", function(feature) {
+
+              if (feature) {
+                const graphic = view.popup.selectedFeatureWidget.graphic;
+                console.log(graphic);
+                const tr = graphic.attributes.tr;
+              const tier = graphic.attributes.tier;
+              const range = graphic.attributes.range;
+              $('#trtitle').html(tr);
+              $('#tr').html(tr);
+              $('#tier').html(tier);
+              $('#range').html(range);
+
+                console.log(view.popup.selectedFeatureWidget.graphic);
+            }
+             /* 
+                if (view.popup.selectedFeatureWidget.graphic.geometry != null) {
+                  view.watch("popup.selectedFeatureWidget.graphic.geometry", function(x){
+                    console.log ("the geometry of the graphic is", x);
+                  })
+                }*/
+
             });
-          });   
+          }
         });
-
-      });  
+        // Watch for when features are selected
+        /*view.popup.watch("selectedFeature", function (graphic) { 
+          console.log(graphic);
+          if (graphic) {
+            
+          }         
+        });*/
+      });
 
       webmap.when(() => {
         const { title, description, thumbnailUrl, avgRating } = webmap.portalItem;
