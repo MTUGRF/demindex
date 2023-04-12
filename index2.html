@@ -306,7 +306,7 @@ td {
        var height = (ymax - ymin);
 
        // resolution of the image service
-       var ps = 0.25;  //0.87 or 0.86
+       var ps = 2;  //0.87 or 0.86
 
        var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
        console.log(size);  
@@ -366,6 +366,7 @@ td {
                   if (x != null) {
                     console.log ("the geometry of the graphic is", x.extent.ymax);
                     $("#download").click(function() {
+                      document.querySelector("calcite-loader").active = true;
                       downloadRaster(x.extent.xmin, x.extent.ymin, x.extent.xmax, x.extent.ymax);
                     });                
                   }
