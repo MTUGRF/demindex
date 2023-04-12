@@ -114,6 +114,19 @@ td {
  .esri-ui .esri-popup {
     display:  none;
  }
+
+.notice-icon {
+  --calcite-ui-brand: #ffcd00 !important;
+  color: #fC0 !important;
+}
+
+:host([color="blue"]) .container .notice-icon {
+  --calcite-ui-brand: #ffcd00;
+}
+
+.container {
+  border-color: #FC0 !important;
+}
   </style>
 
   <body>
@@ -202,6 +215,23 @@ td {
       </calcite-shell-panel>
       <div id="viewDiv"></div>
     </calcite-shell>
+    <calcite-modal aria-labelledby="modal-title" id="example-modal" docked scale="s" width="s">
+    <div slot="header" id="modal-title">
+        Download Raster
+    </div>
+    <div slot="content">        
+        <calcite-notice open icon="arrow-bold-down" width="full">
+            <div slot="message">Download high resolution DEM from the current bounding box.</div>
+        </calcite-notice>
+    </div>
+        <calcite-button slot="secondary" width="full" appearance="outline" id="cancel">
+        Cancel
+    </calcite-button>
+    <calcite-button slot="primary" width="full" id="downloadModal">
+        Download
+    </calcite-button>
+</calcite-modal>
+
   </div>
   </body>
   <script>
@@ -226,7 +256,7 @@ td {
       "esri/widgets/Feature",
       "esri/widgets/ScaleBar"
     ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature, ScaleBar) {
-
+      const modal = document.getElementById("example-modal");
       $("#tableblock").hide();
       // create a new graphics layer for the sketch
       const graphicsLayer = new GraphicsLayer();
@@ -273,13 +303,6 @@ td {
         view,
         container: "legend-container"
       });
-/*
-      const feature = new Feature({
-        //view,
-        map: webmap,
-        spatialReference: view.SpatialReference,
-        container: "feature-container"
-      });*/
 
       const scaleBar = new ScaleBar({
         view: view
@@ -334,13 +357,17 @@ td {
           success: function(data) { 
             document.querySelector("calcite-loader").active = false;  
             console.log(data);
+            if (data.error) {
+              alert ("Download Failed. Either we have no DEM coverage for this area or the area you have selected is too large. Please try again.");              
+            } else {
             // Get the .TIF url and download the image
             const a = document.createElement("a");
             a.href = data.href;
             a.download = "";
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);        
+            document.body.removeChild(a); 
+            }                   
           }
         });
       }
@@ -349,13 +376,23 @@ td {
       sketch.on("create", function(event) {                 
         // check if the create event's state has changed to complete indicating
         // the graphic create operation is completed.
-        if (event.state === "complete") {
-          document.querySelector("calcite-loader").active = true;
+        if (event.state === "complete") {          
           // get the extent of the drawn feature                               
          // pixelsize X and Y from the image service
          var resolution = (1.738696247684391 + 1.7386962476843981) / 2;
-
-         downloadRaster(event.graphic.geometry.extent.xmin, event.graphic.geometry.extent.ymin, event.graphic.geometry.extent.xmax, event.graphic.geometry.extent.ymax);        
+         modal.open = true;
+         // when the user clicks the download button in the modal
+         $('#downloadModal').click(function() {
+          modal.open = false;
+          document.querySelector("calcite-loader").active = true;
+          downloadRaster(event.graphic.geometry.extent.xmin, event.graphic.geometry.extent.ymin, event.graphic.geometry.extent.xmax, event.graphic.geometry.extent.ymax); 
+         });
+         // when the user clicks the cancel button in the modal
+         $('#cancel').click(function() {
+          modal.open = false;
+          // clear any existing graphics from the sketch layer
+          graphicsLayer.removeAll();
+         });                
         };   
       }); 
 
@@ -377,12 +414,13 @@ td {
               document.querySelector(`[data-panel-id=legend]`).hidden = true;
               document.querySelector(`[data-panel-id=layers]`).hidden = true;
               document.querySelector(`[data-panel-id=basemaps]`).hidden = true;
-              document.querySelector(`[data-panel-id=basemaps]`).hidden = true;
+              document.querySelector(`[data-panel-id=measure]`).hidden = true;
               document.querySelector(`[data-panel-id=information]`).hidden = true;
               document.querySelector(`[data-action-id=layers]`).active = false;
               document.querySelector(`[data-action-id=basemaps]`).active = false;
               document.querySelector(`[data-action-id=legend]`).active = false;
               document.querySelector(`[data-action-id=information]`).active = false;
+              document.querySelector(`[data-action-id=measure]`).active = false;
               const graphic = view.popup.selectedFeatureWidget.graphic;
               console.log(graphic);
               const tr = graphic.attributes.tr;
