@@ -153,7 +153,7 @@ td {
             <td><div id="range"></div></td>          
           </tr>
         </table>
-        <calcite-button icon-start="arrow-bold-down">Download DEM</calcite-button>
+        <calcite-button icon-start="arrow-bold-down" id="download">Download DEM</calcite-button>
         </calcite-panel>
 
         <!-- Info panel (populates with info from the web map) -->
@@ -298,6 +298,35 @@ td {
 
       view.ui.add(sketch, "top-right");
 
+      // sends a request to the image server to process and image based on a Bbox
+      // downloads the image from the url returned from the rest api
+      function downloadRaster (xmin, ymin, xmax, ymax) {
+       // get the width and height from the bounding box
+       var width = (xmax - xmin);
+       var height = (ymax - ymin);
+
+       // resolution of the image service
+       var ps = 0.25;  //0.87 or 0.86
+
+       var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
+       console.log(size);  
+        $.ajax({
+          dataType: 'json',
+          url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/wupdem/ImageServer/exportImage?bbox=' + xmin +  '%2C'+ ymin + '%2C' + xmax + '%2C' + ymax + '&bboxSR=3857&size=' + size + '&imageSR=&time=&format=tiff&pixelType=F32&noData=0&noDataInterpretation=esriNoDataMatchAny&interpolation=+RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=json',               
+          success: function(data) { 
+            document.querySelector("calcite-loader").active = false;  
+            console.log(data);
+            // Get the .TIF url and download the image
+            const a = document.createElement("a");
+            a.href = data.href;
+            a.download = "";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);        
+          }
+        });
+      }
+
       // Listen to sketch widget's create event.
       sketch.on("create", function(event) {                 
         // check if the create event's state has changed to complete indicating
@@ -308,71 +337,58 @@ td {
          // pixelsize X and Y from the image service
          var resolution = (1.738696247684391 + 1.7386962476843981) / 2;
 
-         // get the width and height from the bounding box
-         var width = (event.graphic.geometry.extent.xmax - event.graphic.geometry.extent.xmin);
-         var height = (event.graphic.geometry.extent.ymax - event.graphic.geometry.extent.ymin);
-
-         var ps = 0.25;  //0.87 or 0.86
-
-         var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
-         console.log(size);  
-          $.ajax({
-            dataType: 'json',
-            url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/wupdem/ImageServer/exportImage?bbox=' + event.graphic.geometry.extent.xmin +  '%2C'+ event.graphic.geometry.extent.ymin + '%2C' + event.graphic.geometry.extent.xmax + '%2C' + event.graphic.geometry.extent.ymax + '&bboxSR=3857&size=' + size + '&imageSR=&time=&format=tiff&pixelType=F32&noData=0&noDataInterpretation=esriNoDataMatchAny&interpolation=+RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=json',               
-            success: function(data) { 
-              document.querySelector("calcite-loader").active = false;  
-              console.log(data);
-              // Get the .TIF url and download the image
-              const a = document.createElement("a");
-              a.href = data.href;
-              a.download = "";
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);        
-            }
-          });
+         downloadRaster(event.graphic.geometry.extent.xmin, event.graphic.geometry.extent.ymin, event.graphic.geometry.extent.xmax, event.graphic.geometry.extent.ymax);        
         };   
-      });    
-
-    
-  
+      }); 
 
       view.when(function () {
-          webmap.when((response) => {
+        webmap.when((response) => {
           returnedLayer = response.layers.find((layer) => {
             console.log(layer); 
             return layer.id === "18385ca2a11-layer-3";
           });
 
-          if (returnedLayer.popupTemplate.returnGeometry === false) {
-
-            returnedLayer.popupTemplate.returnGeometry = true;
-
-            view.watch("popup.viewModel.active", function(feature) {
-
-              if (feature) {
-                const graphic = view.popup.selectedFeatureWidget.graphic;
-                console.log(graphic);
-                const tr = graphic.attributes.tr;
+        if (returnedLayer.popupTemplate.returnGeometry === false) {
+          returnedLayer.popupTemplate.returnGeometry = true;
+          view.watch("popup.viewModel.active", function(feature) {
+            if (feature) {
+              const graphic = view.popup.selectedFeatureWidget.graphic;
+              console.log(graphic);
+              const tr = graphic.attributes.tr;
               const tier = graphic.attributes.tier;
               const range = graphic.attributes.range;
               $('#trtitle').html(tr);
               $('#tr').html(tr);
               $('#tier').html(tier);
               $('#range').html(range);
+              let xmin;
+              let ymin;
+              let xmax;
+              let ymax;
+              if (view.popup.selectedFeatureWidget.graphic.geometry == null) {
+                view.watch("popup.selectedFeatureWidget.graphic.geometry", function(x){
+                  if (x != null)
+                  {
+                  console.log ("the geometry of the graphic is", x.extent.ymax);
+                  xmin = x.extent.xmin;
+                  ymin = x.extent.ymin;
+                  xmax = x.extent.xmax;
+                  ymax = x.extent.ymax;
+                }
+                })
+                downloadRaster(xmin, ymin, xmax, ymax);
+              }
 
-                console.log(view.popup.selectedFeatureWidget.graphic);
-            }
-             /* 
-                if (view.popup.selectedFeatureWidget.graphic.geometry != null) {
-                  view.watch("popup.selectedFeatureWidget.graphic.geometry", function(x){
-                    console.log ("the geometry of the graphic is", x);
-                  })
-                }*/
-
-            });
+             /* console.log(view.popup.selectedFeatureWidget.graphic);
+              console.log(view.popup.selectedFeatureWidget.graphic);
+              downloadRaster(view.popup.selectedFeatureWidget.graphic.geometry.extent.xmin, view.popup.selectedFeatureWidget.graphic.geometry.graphic.geometry.extent.ymin, view.popup.selectedFeatureWidget.graphic.geometry.extent.xmax, view.popup.selectedFeatureWidget.graphic.geometry.extent.ymax);  */
           }
-        });
+           
+              
+
+          });
+      }
+      });
         // Watch for when features are selected
         /*view.popup.watch("selectedFeature", function (graphic) { 
           console.log(graphic);
