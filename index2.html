@@ -360,43 +360,22 @@ td {
               $('#trtitle').html(tr);
               $('#tr').html(tr);
               $('#tier').html(tier);
-              $('#range').html(range);
-              let xmin;
-              let ymin;
-              let xmax;
-              let ymax;
+              $('#range').html(range);             
               if (view.popup.selectedFeatureWidget.graphic.geometry == null) {
                 view.watch("popup.selectedFeatureWidget.graphic.geometry", function(x){
-                  if (x != null)
-                  {
-                  console.log ("the geometry of the graphic is", x.extent.ymax);
-                  xmin = x.extent.xmin;
-                  ymin = x.extent.ymin;
-                  xmax = x.extent.xmax;
-                  ymax = x.extent.ymax;
-                }
-                })
-                downloadRaster(xmin, ymin, xmax, ymax);
+                  if (x != null) {
+                    console.log ("the geometry of the graphic is", x.extent.ymax);
+                    $("#download").click(function() {
+                      downloadRaster(x.extent.xmin, x.extent.ymin, x.extent.xmax, x.extent.ymax);
+                    });                
+                  }
+                });             
               }
-
-             /* console.log(view.popup.selectedFeatureWidget.graphic);
-              console.log(view.popup.selectedFeatureWidget.graphic);
-              downloadRaster(view.popup.selectedFeatureWidget.graphic.geometry.extent.xmin, view.popup.selectedFeatureWidget.graphic.geometry.graphic.geometry.extent.ymin, view.popup.selectedFeatureWidget.graphic.geometry.extent.xmax, view.popup.selectedFeatureWidget.graphic.geometry.extent.ymax);  */
-          }
-           
-              
-
+            } 
           });
-      }
-      });
-        // Watch for when features are selected
-        /*view.popup.watch("selectedFeature", function (graphic) { 
-          console.log(graphic);
-          if (graphic) {
-            
-          }         
-        });*/
-      });
+        }
+      });      
+    });
 
       webmap.when(() => {
         const { title, description, thumbnailUrl, avgRating } = webmap.portalItem;
