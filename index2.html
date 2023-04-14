@@ -454,20 +454,22 @@ td {
       }
 
       // Listen to sketch widget's create event.
-      sketch.on("create", function(event) {                         
+      sketch.on("create", function(event) {
+        //graphicsLayer.removeAll();                         
         // check if the create event's state has changed to complete indicating
         // the graphic create operation is completed.
         if (event.state === "complete") {          
           // get the extent of the drawn feature                               
          // pixelsize X and Y from the image service
          var resolution = (1.738696247684391 + 1.7386962476843981) / 2;
-         modal.open = true;
+       //  modal.open = true;
          // when the user clicks the download button in the modal
-         $('#downloadModal').click(function() {
+         //$('#downloadModal').click(function() {
           modal.open = false;
           document.querySelector("calcite-loader").active = true;
           downloadRaster(event.graphic.geometry.extent.xmin, event.graphic.geometry.extent.ymin, event.graphic.geometry.extent.xmax, event.graphic.geometry.extent.ymax); 
-         });
+         // graphicsLayer.removeAll();
+         //});
          // when the user clicks the cancel button in the modal
          $('#cancel').click(function() {
           modal.open = false;
