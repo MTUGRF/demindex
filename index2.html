@@ -191,25 +191,50 @@ td {
            <calcite-label layout="inline">About</calcite-label>
               <p>This application serves as an Index map allowing for the discovery and download of Two-Foot Resolution Digital Elevation Model (DEM) tiles for the Western Upper Peninsula of Michigan. The DEM coverage is available to download either by Township and Range section or by manaully selecting an area on the map. To download a DEM click on the Township and Range section on the PLSS grid of the township you are interested in downloading the DEM for and click the 'Download DEM' in the popup. If you have a different area of interest you can use the bounding box tool to select an area. Simply click on the bounding box icon on the toolbar in the upper right hand corner of the screen and draw the bounding box on the map in the area you are interested in. The DEM will process and download automatically. </p>
 
-              <p> Metadata documents are available for DEM coverage in each county. Click on any Township and Range section and a link to the corespdoning metadata file will apear in the popup.</p> 
+              <p> Metadata documents are available for DEM coverage in each county. See the metadata section below for corresponding metadata documents to each county.</p> 
 
-              <p> This DEM coverage is also available for the entire Western UP as an Image Service. To add an image service to any Web map or for use in GIS software, you can use the service URL: </p>
+              <p> This DEM coverage is also available for the entire Western UP as an Image Service. To add an image service to any Web map or for use in GIS software, you can use the <a href="https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/wupdem/ImageServer">Service URL.</a></p>
 
-              <calcite-label layout="inline">Metadata</calcite-label>
-              <p>Originator: Quantum Spatial, Inc.<br>
-              Date Created: 2018<br>
-              Lidar Scan Angle: 18<br>
-              Altitude Datum: NAVD88<br>
-              Lidar Normal Point Spacing: 0.6m<br>
-              Lidar Specification: USGS-NGP Base Specification (2011) State Plane Michigan North FIPS 2011, intl feet<br>
-              Lidar CRS: NAD83 (2011) State Plane Michigan North FIPS 2111, Intl feet<br>
-              Lidar Sensor: Leica ALS70<br>
-              Place: Ottawa National Forest<br>
-              Created by: Steven Anderson<br>
-              State Name: Michigan<br>
-              Distributing Agency: Sanborn Map Company, Inc.<br> 
-              Area of Interest: Houghton<br>
-              Year Published: 2020</p>            
+             <calcite-label layout="inline">Associated Metadata Documents</calcite-label>
+              <table class="esri-widget__table">
+                <tr>
+                <td>Baraga County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/89cf7afdca3a46cdac4301c1268c5913/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
+                <td>Dickison County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/7d68016c64ec446d95515d6ac629090d/data">Download Metadata</a></td>
+              </tr>
+              <tr>      
+              <tr>            
+                <td>Gogebic County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/89cf7afdca3a46cdac4301c1268c5913/data">Download Metadata</a></td>
+              </tr>
+              <tr>            
+                <td>Houghton County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/b7644008116a49d38c4a78cfcf006d30/data">Download Metadata</a></td>          
+              </tr>
+              <tr>            
+                <td>Iron County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/c5742edc949c4b3b8c773a1a73257f47/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
+                <td>Keweenaw County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/e7956459ee1847d2aa7775a707690425/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
+                <td>Menominee County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/84c0916dcb494a2081dbaf3e54aeba75/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
+                <td>ONF (2018)  </td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/60f32f0234dd4fb587e4635c8fe7deaf/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
+                <td>ONF (2020)</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/b7644008116a49d38c4a78cfcf006d30/data">Download Metadata</a></td>          
+              </tr>              
+            </table>                
           </div>
         </calcite-panel>
       </calcite-shell-panel>
@@ -373,7 +398,9 @@ td {
       }
 
       // Listen to sketch widget's create event.
-      sketch.on("create", function(event) {                 
+      sketch.on("create", function(event) {
+        // if there are any graphics remove them
+        graphicsLayer.removeAll();                 
         // check if the create event's state has changed to complete indicating
         // the graphic create operation is completed.
         if (event.state === "complete") {          
@@ -447,53 +474,49 @@ td {
       });      
     });
 
-      webmap.when(() => {
-        const { title, description, thumbnailUrl, avgRating } = webmap.portalItem;
-        document.querySelector("#header-title").textContent = "MTU GRF DEM Download Tool";
-       // document.querySelector("#item-description").innerHTML = description;
-        //document.querySelector("#item-thumbnail").src = thumbnailUrl;
-       // document.querySelector("#item-rating").value = avgRating;
+    webmap.when(() => {
+      const { title, description, thumbnailUrl, avgRating } = webmap.portalItem;
+      document.querySelector("#header-title").textContent = "MTU GRF DEM Download Tool";      
+      let activeWidget;
 
-        let activeWidget;
+      const handleActionBarClick = ({ target }) => {
+        document.querySelector(`[data-panel-id=feature]`).hidden = true;
+        document.querySelector(`[data-action-id=feature]`).active = false;
 
-        const handleActionBarClick = ({ target }) => {
-          document.querySelector(`[data-panel-id=feature]`).hidden = true;
-          document.querySelector(`[data-action-id=feature]`).active = false;
+        if (target.tagName !== "CALCITE-ACTION") {
+          return;
+        }
 
-          if (target.tagName !== "CALCITE-ACTION") {
-            return;
-          }
+        if (activeWidget) {
+          document.querySelector(`[data-action-id=${activeWidget}]`).active = false;
+          document.querySelector(`[data-panel-id=${activeWidget}]`).hidden = true;
+        }
 
-          if (activeWidget) {
-            document.querySelector(`[data-action-id=${activeWidget}]`).active = false;
-            document.querySelector(`[data-panel-id=${activeWidget}]`).hidden = true;
-          }
+        const nextWidget = target.dataset.actionId;
+        if (nextWidget !== activeWidget) {
+          document.querySelector(`[data-action-id=${nextWidget}]`).active = true;
+          document.querySelector(`[data-panel-id=${nextWidget}]`).hidden = false;
+          activeWidget = nextWidget;
+        } else {
+          activeWidget = null;
+        }
+      };
 
-          const nextWidget = target.dataset.actionId;
-          if (nextWidget !== activeWidget) {
-            document.querySelector(`[data-action-id=${nextWidget}]`).active = true;
-            document.querySelector(`[data-panel-id=${nextWidget}]`).hidden = false;
-            activeWidget = nextWidget;
-          } else {
-            activeWidget = null;
-          }
+      document.querySelector("calcite-action-bar").addEventListener("click", handleActionBarClick);
+
+      let actionBarExpanded = false;
+
+      document.addEventListener("calciteActionBarToggle", event => {
+        actionBarExpanded = !actionBarExpanded;
+        view.padding = {
+          left: actionBarExpanded ? 135 : 45
         };
-
-        document.querySelector("calcite-action-bar").addEventListener("click", handleActionBarClick);
-
-        let actionBarExpanded = false;
-
-        document.addEventListener("calciteActionBarToggle", event => {
-          actionBarExpanded = !actionBarExpanded;
-          view.padding = {
-            left: actionBarExpanded ? 135 : 45
-          };
-        });
-
-        document.querySelector("calcite-shell").hidden = false;
-       // document.querySelector("calcite-loader").active = false;
-
       });
+
+      document.querySelector("calcite-shell").hidden = false;
+     // document.querySelector("calcite-loader").active = false;
+
     });
+  });
   </script>
 </html>
