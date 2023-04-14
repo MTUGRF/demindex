@@ -271,7 +271,8 @@ td {
       "esri/config", 
       "esri/WebMap", 
       "esri/layers/TileLayer",
-      "esri/layers/GraphicsLayer",      
+      "esri/layers/GraphicsLayer", 
+      "esri/layers/FeatureLayer",     
       "esri/widgets/Expand", 
       "esri/widgets/Sketch", 
       "esri/widgets/Measurement",
@@ -279,8 +280,8 @@ td {
       "esri/geometry/SpatialReference", 
       "esri/geometry/Extent",
       "esri/widgets/Feature",
-      "esri/widgets/ScaleBar"
-    ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature, ScaleBar) {
+      "esri/widgets/ScaleBar",
+    ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, FeatureLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature, ScaleBar) {
       const modal = document.getElementById("example-modal");
       $("#tableblock").hide();
       // create a new graphics layer for the sketch
@@ -306,6 +307,61 @@ td {
           }
         }
       });  
+
+       const renderer = {
+        type: "simple",  // autocasts as new SimpleRenderer()
+        symbol: {
+          type: "simple-fill",  // autocasts as new SimpleFillSymbol()
+          color: [ 255, 128, 0, 0 ],
+          outline: {  // autocasts as new SimpleLineSymbol()
+            width: 1,
+            color: "red"
+          }
+        }
+      }; 
+
+      const labelClass = {
+        // autocasts as new LabelClass()
+        symbol: {
+          type: "text",  // autocasts as new TextSymbol()
+          color: "red",
+           haloColor: "gray",
+           haloSize: 0,             
+          font: {  // autocast as new Font()
+          //  family: "Playfair Display",
+            size: 12,
+            weight: "bold"
+          }
+        },
+        labelPlacement: "above-center",
+        labelExpressionInfo: {
+          expression: "$feature.tr"
+        },
+          maxScale: 0,
+          minScale: 577790.554289,
+      };
+
+       const template = {
+        // autocasts as new PopupTemplate()
+        title: "<font color='#008000'>{tr}",  
+        content: "default content"
+       }
+
+      const gridLayer = new FeatureLayer({
+        url: "https://portal1-geo.sabu.mtu.edu/server/rest/services/Hosted/Township_and_Range_Sections/FeatureServer/0",
+        outFields: ["*"],
+        renderer: renderer,
+        labelingInfo: [labelClass]
+      });
+
+      webmap.add(gridLayer);
+
+      // Set the popup template on the layer
+      gridLayer.popupTemplate = template;
+
+      view.when(function() {
+        webmap.reorder(gridLayer, 99999999999);
+      });
 
       view.padding.left = 45;
 
@@ -372,7 +428,7 @@ td {
        var height = (ymax - ymin);
 
        // resolution of the image service
-       var ps = 2;  //0.87 or 0.86
+       var ps = 0.87;  //0.87 or 0.86
 
        var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
        console.log(size);  
@@ -423,56 +479,39 @@ td {
         };   
       }); 
 
-      view.when(function () {
-        webmap.when((response) => {
-          returnedLayer = response.layers.find((layer) => {
-            console.log(layer); 
-            return layer.id === "18385ca2a11-layer-3";
-          });
+      view.popup.watch("selectedFeature", function (graphic) {
+        if (graphic) {
+          $("#nofeature").hide();
+          $("#tableblock").show();
+          document.querySelector(`[data-action-id=feature]`).active = true;
+          document.querySelector(`[data-panel-id=feature]`).hidden = false;
+          document.querySelector(`[data-panel-id=legend]`).hidden = true;
+          document.querySelector(`[data-panel-id=layers]`).hidden = true;
+          document.querySelector(`[data-panel-id=basemaps]`).hidden = true;
+          document.querySelector(`[data-panel-id=measure]`).hidden = true;
+          document.querySelector(`[data-panel-id=information]`).hidden = true;
+          document.querySelector(`[data-action-id=layers]`).active = false;
+          document.querySelector(`[data-action-id=basemaps]`).active = false;
+          document.querySelector(`[data-action-id=legend]`).active = false;
+          document.querySelector(`[data-action-id=information]`).active = false;
+          document.querySelector(`[data-action-id=measure]`).active = false;
+          const bbox = graphic.geometry.extent; 
+          console.log(graphic);
+          const tr = graphic.attributes.tr;
+          const tier = graphic.attributes.tier;
+          const range = graphic.attributes.range;
+          $('#trtitle').html(tr);
+          $('#tr').html(tr);
+          $('#tier').html(tier);
+          $('#range').html(range);  
 
-        if (returnedLayer.popupTemplate.returnGeometry === false) {
-          returnedLayer.popupTemplate.returnGeometry = true;
-          view.watch("popup.viewModel.active", function(feature) {
-            if (feature) {
-              $("#nofeature").hide();
-              $("#tableblock").show();
-              document.querySelector(`[data-action-id=feature]`).active = true;
-              document.querySelector(`[data-panel-id=feature]`).hidden = false;
-              document.querySelector(`[data-panel-id=legend]`).hidden = true;
-              document.querySelector(`[data-panel-id=layers]`).hidden = true;
-              document.querySelector(`[data-panel-id=basemaps]`).hidden = true;
-              document.querySelector(`[data-panel-id=measure]`).hidden = true;
-              document.querySelector(`[data-panel-id=information]`).hidden = true;
-              document.querySelector(`[data-action-id=layers]`).active = false;
-              document.querySelector(`[data-action-id=basemaps]`).active = false;
-              document.querySelector(`[data-action-id=legend]`).active = false;
-              document.querySelector(`[data-action-id=information]`).active = false;
-              document.querySelector(`[data-action-id=measure]`).active = false;
-              const graphic = view.popup.selectedFeatureWidget.graphic;
-              console.log(graphic);
-              const tr = graphic.attributes.tr;
-              const tier = graphic.attributes.tier;
-              const range = graphic.attributes.range;
-              $('#trtitle').html(tr);
-              $('#tr').html(tr);
-              $('#tier').html(tier);
-              $('#range').html(range);             
-              if (view.popup.selectedFeatureWidget.graphic.geometry == null) {
-                view.watch("popup.selectedFeatureWidget.graphic.geometry", function(x){
-                  if (x != null) {
-                    console.log ("the geometry of the graphic is", x.extent.ymax);
-                    $("#download").click(function() {
-                      document.querySelector("calcite-loader").active = true;
-                      downloadRaster(x.extent.xmin, x.extent.ymin, x.extent.xmax, x.extent.ymax);
-                    });                
-                  }
-                });             
-              }
-            } 
-          });
-        }
-      });      
-    });
+          $("#download").click(function() {
+            console.log("downloading raster...");
+            document.querySelector("calcite-loader").active = true;
+            downloadRaster(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax);
+          });     
+        }        
+      }); 
 
     webmap.when(() => {
       const { title, description, thumbnailUrl, avgRating } = webmap.portalItem;
