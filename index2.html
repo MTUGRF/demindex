@@ -111,22 +111,22 @@ td {
     padding-left: 1rem;
   }
 
- .esri-ui .esri-popup {
+  .esri-ui .esri-popup {
     display:  none;
- }
+  }
 
-.notice-icon {
-  --calcite-ui-brand: #ffcd00 !important;
-  color: #fC0 !important;
-}
+  .notice-icon {
+    --calcite-ui-brand: #ffcd00 !important;
+    color: #fC0 !important;
+  }
 
-:host([color="blue"]) .container .notice-icon {
-  --calcite-ui-brand: #ffcd00;
-}
+  :host([color="blue"]) .container .notice-icon {
+    --calcite-ui-brand: #ffcd00;
+  }
 
-.container {
-  border-color: #FC0 !important;
-}
+  .container {
+    border-color: #FC0 !important;
+  }
   </style>
 
   <body>
@@ -454,9 +454,7 @@ td {
       }
 
       // Listen to sketch widget's create event.
-      sketch.on("create", function(event) {
-        // if there are any graphics remove them
-        graphicsLayer.removeAll();                 
+      sketch.on("create", function(event) {                         
         // check if the create event's state has changed to complete indicating
         // the graphic create operation is completed.
         if (event.state === "complete") {          
