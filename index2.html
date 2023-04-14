@@ -428,7 +428,7 @@ td {
        var height = (ymax - ymin);
 
        // resolution of the image service
-       var ps = 0.87;  //0.87 or 0.86
+       var ps = 0.86;  //0.87 or 0.86
 
        var size = (parseInt(width / ps)).toString() + ", " + (parseInt(height / ps)).toString();       
        console.log(size);  
@@ -479,6 +479,9 @@ td {
         };   
       }); 
 
+      let selectedGraphic = null;
+
+      // get the bounding box of the selected TR section
       view.popup.watch("selectedFeature", function (graphic) {
         if (graphic) {
           $("#nofeature").hide();
@@ -494,9 +497,9 @@ td {
           document.querySelector(`[data-action-id=basemaps]`).active = false;
           document.querySelector(`[data-action-id=legend]`).active = false;
           document.querySelector(`[data-action-id=information]`).active = false;
-          document.querySelector(`[data-action-id=measure]`).active = false;
-          const bbox = graphic.geometry.extent; 
+          document.querySelector(`[data-action-id=measure]`).active = false;           
           console.log(graphic);
+          selectedGraphic = graphic;
           const tr = graphic.attributes.tr;
           const tier = graphic.attributes.tier;
           const range = graphic.attributes.range;
@@ -504,13 +507,17 @@ td {
           $('#tr').html(tr);
           $('#tier').html(tier);
           $('#range').html(range);  
+        }
+      });
 
-          $("#download").click(function() {
-            console.log("downloading raster...");
-            document.querySelector("calcite-loader").active = true;
-            downloadRaster(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax);
-          });     
-        }        
+      // when the user clicks the download button, download the raster from the selected TR section  
+      $("#download").click(function() {
+        if (selectedGraphic) {
+          const bbox = selectedGraphic.geometry.extent;
+          console.log("downloading raster...");
+          document.querySelector("calcite-loader").active = true;
+          downloadRaster(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax);
+        }
       }); 
 
     webmap.when(() => {
