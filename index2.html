@@ -127,12 +127,22 @@ td {
   .container {
     border-color: #FC0 !important;
   }
+
+  #dlnotice {
+    z-index: 99999999 !important;
+    position: absolute;
+    top: 50%;
+    left: 40%;
+    --calcite-ui-brand: #ffcd00;
+  }
   </style>
 
-  <body>
-    <calcite-loader scale="l" label="Processing raster..."></calcite-loader>
-    <div class="calcite-theme-dark">
-    
+  <body>     
+    <div class="calcite-theme-dark">      
+    <calcite-notice icon="download" id="dlnotice" kind="brand" scale="l">
+        <div slot="title">Processing raster...<calcite-loader scale="m" label="Processing raster..."></calcite-loader></div>
+        <div slot="message">This may take several minutes. Please wait.</div>       
+    </calcite-notice>    
     <calcite-shell content-behind hidden>
      <div slot="header" class="custom-header">
       <img src="husky.svg" width="50" height="50" class="d-inline-block align-top" alt=""><h2 id="header-title" slot="header">
@@ -144,7 +154,7 @@ td {
           <calcite-action data-action-id="layers" icon="layers" text="Layers"></calcite-action>
           <calcite-action data-action-id="basemaps" icon="basemap" text="Basemaps"></calcite-action>
           <calcite-action data-action-id="legend" icon="legend" text="Legend"></calcite-action>
-          <calcite-action data-action-id="measure" icon="measure-area" text="Measure"></calcite-action>
+        <!--   <calcite-action data-action-id="measure" icon="measure-area" text="Measure"></calcite-action> -->
           <calcite-action data-action-id="feature" icon="popup" text="Feature"></calcite-action>
           <calcite-action data-action-id="information" icon="information" text="Information"></calcite-action>
         </calcite-action-bar>
@@ -191,24 +201,42 @@ td {
            <calcite-label layout="inline">About</calcite-label>
               <p>This application serves as an Index map allowing for the discovery and download of Two-Foot Resolution Digital Elevation Model (DEM) tiles for the Western Upper Peninsula of Michigan. The DEM coverage is available to download either by Township and Range section or by manaully selecting an area on the map. To download a DEM click on the Township and Range section on the PLSS grid of the township you are interested in downloading the DEM for and click the 'Download DEM' in the popup. If you have a different area of interest you can use the bounding box tool to select an area. Simply click on the bounding box icon on the toolbar in the upper right hand corner of the screen and draw the bounding box on the map in the area you are interested in. The DEM will process and download automatically. </p>
 
+              <img src="bbox.png" style="padding-bottom: 1rem">
+
               <p> Metadata documents are available for DEM coverage in each county. See the metadata section below for corresponding metadata documents to each county.</p> 
 
               <p> This DEM coverage is also available for the entire Western UP as an Image Service. To add an image service to any Web map or for use in GIS software, you can use the <a href="https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/wupdem/ImageServer">Service URL.</a></p>
 
              <calcite-label layout="inline">Associated Metadata Documents</calcite-label>
               <table class="esri-widget__table">
+              <tr>
+                <td>Alger County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/7466f1f050c740b68f13622003f1d5b6/data">Download Metadata</a></td>          
+              </tr>
                 <tr>
                 <td>Baraga County</td>
                 <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/89cf7afdca3a46cdac4301c1268c5913/data">Download Metadata</a></td>          
               </tr>
+              <tr>
+                <td>Chippewa County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/737ce88746e24707abf400ecf82ea7bd/data">Download Metadata</a></td>          
+              </tr>
+              <tr>            
+                <td>Delta County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/4323c21c7c4948729c19029567b07970/data">Download Metadata</a></td>
+              </tr>
                <tr>            
-                <td>Dickison County</td>
+                <td>Dickinson County</td>
                 <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/7d68016c64ec446d95515d6ac629090d/data">Download Metadata</a></td>
               </tr>
               <tr>      
               <tr>            
                 <td>Gogebic County</td>
                 <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/89cf7afdca3a46cdac4301c1268c5913/data">Download Metadata</a></td>
+              </tr>
+              <tr>            
+                <td>Hiawatha NF</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/e9f368e460144e7cb765f86295fae0b0/data">Download Metadata</a></td>          
               </tr>
               <tr>            
                 <td>Houghton County</td>
@@ -223,6 +251,18 @@ td {
                 <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/e7956459ee1847d2aa7775a707690425/data">Download Metadata</a></td>          
               </tr>
                <tr>            
+                <td>Luce County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/737ce88746e24707abf400ecf82ea7bd/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
+                <td>Mackinac County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/1680b66ac03b45d5aed7e7f023a0ba31/data">Download Metadata</a></td>          
+              </tr>
+              <tr>            
+                <td>Marquette County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/2786c6c63bf24fbb868e907aecf9d734/data">Download Metadata</a></td>          
+              </tr>
+               <tr>            
                 <td>Menominee County</td>
                 <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/84c0916dcb494a2081dbaf3e54aeba75/data">Download Metadata</a></td>          
               </tr>
@@ -233,7 +273,11 @@ td {
                <tr>            
                 <td>ONF (2020)</td>
                 <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/b7644008116a49d38c4a78cfcf006d30/data">Download Metadata</a></td>          
-              </tr>              
+              </tr>
+              <tr>            
+                <td>Schoolcraft County</td>
+                <td><a href="https://portal1-geo.sabu.mtu.edu/mtuarcgis/sharing/rest/content/items/737ce88746e24707abf400ecf82ea7bd/data">Download Metadata</a></td>          
+              </tr>               
             </table>                
           </div>
         </calcite-panel>
@@ -284,6 +328,7 @@ td {
     ], function(WebMap, MapView, Bookmarks, BasemapGallery, LayerList, Legend, Print, esriConfig, WebMap, TileLayer, GraphicsLayer, FeatureLayer, Expand, Sketch, Measurement, projection, SpatialReference, Extent, Feature, ScaleBar) {
       const modal = document.getElementById("example-modal");
       $("#tableblock").hide();
+     
       // create a new graphics layer for the sketch
       const graphicsLayer = new GraphicsLayer();
       // Set the portal URL
@@ -436,6 +481,7 @@ td {
           dataType: 'json',
           url: 'https://gis-core.sabu.mtu.edu:6443/arcgis/rest/services/wupdem/ImageServer/exportImage?bbox=' + xmin +  '%2C'+ ymin + '%2C' + xmax + '%2C' + ymax + '&bboxSR=3857&size=' + size + '&imageSR=&time=&format=tiff&pixelType=F32&noData=0&noDataInterpretation=esriNoDataMatchAny&interpolation=+RSP_BilinearInterpolation&compression=&compressionQuality=&bandIds=&sliceId=&mosaicRule=&renderingRule=&adjustAspectRatio=true&validateExtent=false&lercVersion=1&compressionTolerance=&f=json',               
           success: function(data) { 
+           document.querySelector("calcite-notice").active = false;
             document.querySelector("calcite-loader").active = false;  
             console.log(data);
             if (data.error) {
@@ -467,6 +513,7 @@ td {
          //$('#downloadModal').click(function() {
           modal.open = false;
           document.querySelector("calcite-loader").active = true;
+          document.querySelector("calcite-notice").active = true;
           downloadRaster(event.graphic.geometry.extent.xmin, event.graphic.geometry.extent.ymin, event.graphic.geometry.extent.xmax, event.graphic.geometry.extent.ymax); 
          // graphicsLayer.removeAll();
          //});
@@ -491,13 +538,13 @@ td {
           document.querySelector(`[data-panel-id=legend]`).hidden = true;
           document.querySelector(`[data-panel-id=layers]`).hidden = true;
           document.querySelector(`[data-panel-id=basemaps]`).hidden = true;
-          document.querySelector(`[data-panel-id=measure]`).hidden = true;
+        //  document.querySelector(`[data-panel-id=measure]`).hidden = true;
           document.querySelector(`[data-panel-id=information]`).hidden = true;
           document.querySelector(`[data-action-id=layers]`).active = false;
           document.querySelector(`[data-action-id=basemaps]`).active = false;
           document.querySelector(`[data-action-id=legend]`).active = false;
           document.querySelector(`[data-action-id=information]`).active = false;
-          document.querySelector(`[data-action-id=measure]`).active = false;           
+         // document.querySelector(`[data-action-id=measure]`).active = false;           
           console.log(graphic);
           selectedGraphic = graphic;
           const tr = graphic.attributes.tr;
@@ -516,6 +563,7 @@ td {
           const bbox = selectedGraphic.geometry.extent;
           console.log("downloading raster...");
           document.querySelector("calcite-loader").active = true;
+          document.querySelector("calcite-notice").active = true;
           downloadRaster(bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax);
         }
       }); 
